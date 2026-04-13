@@ -200,7 +200,7 @@ def demo_collector():
     from src.task_sources.API_source import APISource
     
     # Создаем источники
-    file_source = FileSource("example.txt")
+    file_source = FileSource("example.json")
     gen_source = GeneratorSource(count=4, id_start=1)
     api_source = APISource()
     

@@ -3,15 +3,9 @@ import os
 
 from abc import ABC, abstractmethod
 from typing import List
-from src.task.task import Task
+from src.task.task import Task, TaskStatus
 
-# Абстрактный класс
-class Reader(ABC):
-    @abstractmethod
-    def get_tasks(self, file_path: str) -> List[Task]:
-        """Считывает файл и возвращает список объектов Task"""
-        pass
-    
+
     
 class FileSource():
     def __init__(self, file_path: str):
@@ -35,7 +29,7 @@ class FileSource():
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 for item in data:
-                    tasks.append(Task(item["id"], item["payload"]))
+                    tasks.append(Task(id=item["id"], payload=item["payload"], status=TaskStatus(item["status"]), priority=item["priority"]))
         except (json.JSONDecodeError, KeyError) as e:
             raise Exception(f"Ошибка при чтении JSON: {e}")
         
@@ -56,10 +50,10 @@ class FileSource():
                         print(f"Ошибка в строке {line_num}: отсутствует ':'")
                         continue
                         
-                    task_id, payload = line.split(':', 1)
-                    tasks.append(Task(task_id.strip(), payload.strip()))
+                    task_id, payload, status, priority = line.split(':', 3)
+                    tasks.append(Task(id=task_id.strip(), payload=payload.strip(), status=status.strip(), priority=priority.strip()))
         except FileNotFoundError:
-            raise FileNotFoundError("Ошибка: файл json не найден")
+            raise FileNotFoundError("Ошибка: файл txt не найден")
         return tasks
         
 

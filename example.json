@@ -2,18 +2,25 @@
 
 
     {
+        "id": 1,
+        "payload": "Test task 1",
+        "status": "todo",
+        "priority": 6
         
-        "payload": "Test task 1"
     },
 
     {
         "id": 2,
-        "payload": "Test task 2"
+        "payload": "Test task 2",
+        "status": "todo",
+        "priority": 6
     },
 
     {
         "id": 3,
-        "payload": "Test task 3"
+        "payload": "Test task 3",
+        "status": "todo",
+        "priority": 6
     }
 
 ]
