@@ -37,7 +37,7 @@ class GeneratorSource():
             
             payload = self._generate_text_payload(i)
             status = TaskStatus.TODO
-            priority = random.randint(1, 10)
+            priority = int(random.randint(1, 10))
            
                 
             task = Task(id=task_id, payload=payload, status=status, priority=priority)

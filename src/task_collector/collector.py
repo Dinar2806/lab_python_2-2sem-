@@ -107,7 +107,7 @@ class TaskCollector:
                 old_id = task.id
                 new_id = self._generate_unique_id()
                 
-                new_task = Task(id=new_id, payload=task.payload)
+                new_task = Task(id=new_id, payload=task.payload, priority=task.priority, status=task.status)
                 resolved_tasks.append(new_task)
                 temp_used.add(new_id)  # Добавляем новый ID во временное множество
                 
