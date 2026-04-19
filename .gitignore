@@ -41,6 +41,8 @@ coverage
 .coverage.*        
 htmlcov/           
 coverage.xml       
-*.cover  
+*.cover  \
+
+explore.py
 
 

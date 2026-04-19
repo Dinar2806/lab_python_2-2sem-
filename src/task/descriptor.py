@@ -1,4 +1,4 @@
-from typing import Any, Type, Optional
+from typing import Any, Type, Optional, Union
 from enum import Enum
 
 
@@ -26,7 +26,7 @@ class InvalidPayloadError(TaskValidationError):
 
 # Дескрипторы
 class IDDescriptor:
-    def __init__(self, min_val = 1):
+    def __init__(self, min_val = 0):
         self.min_val = min_val
         
     def __set_name__(self, owner, name):
@@ -40,13 +40,12 @@ class IDDescriptor:
         return getattr(obj, self.private_name, self.min_val)
     
     def __set__(self, obj: Any, value: Any):
-        if not isinstance(value, int):
-            raise InvalidIdError("ID должно быть целым числом!")
+        normalized_id = str(value)
         
-        if value < self.min_val:
-            raise ValueError("Минимальное возможное ID - 1")
+        if int(value) < self.min_val:
+            raise ValueError(f"Минимальное возможное ID - {self.min_val}")
         
-        setattr(obj, self.private_name, value)
+        setattr(obj, self.private_name, normalized_id)
         
     def __delete__(self, obj: Any) -> None:
         raise AttributeError("Невозможно удалить атрибут id")
@@ -68,7 +67,8 @@ class PriorityDescriptor:
         
         return getattr(obj, self.private_name, self.highest_prior)
     
-    def __set__(self, obj: Any, value: Any) -> None:
+    def __set__(self, obj: Any, value: Union[int, str]) -> None:
+        
         if not isinstance(value, int):
             raise InvalidPriorityError(f"Приоритет должен быть целым числом, получено: {type(value)}")
         
@@ -99,7 +99,14 @@ class StatusDescriptor:
         return getattr(obj, self.private_name)
     
     def __set__(self, obj: Any, value: Any) -> None:
-        
+        # if isinstance(value, str):
+        #     try:
+        #         normalized_status = self.expected_enum_type(value)
+        #     except:
+        #         raise ValueError(f"Ошибка - не найден элемент {value} в {self.expected_enum_type}")
+        # else:
+        #     normalized_status = value
+            
         if not isinstance(value, self.expected_enum_type):
              raise InvalidStatusError(f"Статус должен быть экземпляром Enum, получено: {type(value)}")
         

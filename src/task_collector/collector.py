@@ -66,7 +66,7 @@ class TaskCollector:
         
         return resolved_tasks
     
-    def collect_from_sources(self, sources: List[TaskSourceProtocol]) -> Dict[str, List[Task]]:
+    def collect_from_sources(self, sources: List[TaskSourceProtocol], fix_conflicts: bool = True) -> Dict[str, List[Task]]:
         """
         Собирает задачи из нескольких источников.
         
@@ -105,7 +105,7 @@ class TaskCollector:
         for task in tasks:
             if task.id in temp_used:  # Проверяем по временному множеству
                 old_id = task.id
-                new_id = self._generate_unique_id()
+                new_id = str(self._generate_unique_id())
                 
                 new_task = Task(id=new_id, payload=task.payload, priority=task.priority, status=task.status)
                 resolved_tasks.append(new_task)
@@ -143,7 +143,7 @@ class TaskCollector:
             int: Уникальный ID
         """
         # увеличиваем счетчик, пока не найдем свободный ID
-        while self._next_id in self._used_ids:
+        while str(self._next_id) in self._used_ids:
             self._next_id += 1
         
         unique_id = self._next_id
@@ -187,6 +187,7 @@ class TaskCollector:
 
 def quick_collect(sources: List[TaskSourceProtocol]) -> List[Task]:
     
+    
     collector = TaskCollector()
     collector.collect_from_sources(sources)
     return collector.get_all_tasks()
@@ -200,7 +201,7 @@ def demo_collector():
     from src.task_sources.API_source import APISource
     
     # Создаем источники
-    file_source = FileSource("example.json")
+    file_source = FileSource("example.txt")
     gen_source = GeneratorSource(count=4, id_start=1)
     api_source = APISource()
     

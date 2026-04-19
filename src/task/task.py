@@ -14,7 +14,7 @@ class TaskStatus(Enum):
 class Task:
     
     
-    id: Union[int, str]
+    id: str = IDDescriptor()
     
     created_at: str = field(default_factory=lambda: datetime.now(timezone(timedelta(hours=3))))
     

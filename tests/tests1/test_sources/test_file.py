@@ -3,12 +3,12 @@ import json
 import tempfile
 import os
 from src.task_sources.file_source import FileSource
-from src.task.task import Task
+from src.task.task import Task, TaskStatus
 
 # JSON фикстуры
 @pytest.fixture
 def valid_json_file():
-    data = [{"id": 1, "payload": "задача 1"}, {"id": 2, "payload": "задача 2"}]
+    data = [{"id": 1, "payload": "задача 1", "priority": 4, "status": "todo" }, {"id": 2, "payload": "задача 2", "priority": 4, "status": "todo"}]
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         json.dump(data, f)
         temp_path = f.name
@@ -26,8 +26,8 @@ def invalid_json_file():
 # TXT фикстуры
 @pytest.fixture
 def valid_txt_file():
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
-        f.write("1: задача 1\n2: задача 2")
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding="utf-8") as f:
+        f.write("\n1|задача 1|4|todo\n2|задача 2|5|todo")
         temp_path = f.name
     yield temp_path
     os.unlink(temp_path)
@@ -40,13 +40,14 @@ def unsupported_file():
     yield temp_path
     os.unlink(temp_path)
 
-# Тесты JSON
+# Тесты JSON 
 def test_json_valid(valid_json_file):
     tasks = FileSource(valid_json_file).get_tasks()
     assert len(tasks) == 2
-    assert tasks[0].id == 1
+    assert tasks[0].id == "1"
 
 def test_json_invalid(invalid_json_file):
+    """Для правильного выброса ошибок"""
     with pytest.raises(Exception) as e:
         FileSource(invalid_json_file).get_tasks()
     assert "Ошибка при чтении JSON" in str(e.value)

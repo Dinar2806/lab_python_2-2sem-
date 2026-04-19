@@ -30,7 +30,7 @@ class FileSource():
                 data = json.load(f)
                 for item in data:
                     tasks.append(Task(id=item["id"], payload=item["payload"], status=TaskStatus(item["status"]), priority=item["priority"]))
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, UnicodeDecodeError) as e:
             raise Exception(f"Ошибка при чтении JSON: {e}")
         
         except FileNotFoundError:
@@ -41,17 +41,25 @@ class FileSource():
         tasks: List[Task] = []
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
+                next(f) # Пропускаем заголовок
                 for line_num, line in enumerate(f, 1):
                     line = line.strip()
                     if not line:
                         continue
                     
-                    if ':' not in line:
-                        print(f"Ошибка в строке {line_num}: отсутствует ':'")
+                    if '|' not in line:
+                        print(f"Предупреждение - в строке {line_num}: отсутствует '|'")
                         continue
-                        
-                    task_id, payload, status, priority = line.split(':', 3)
-                    tasks.append(Task(id=task_id.strip(), payload=payload.strip(), status=status.strip(), priority=priority.strip()))
+                    
+                    task_id, payload, priority, status = line.split('|', 3)
+                    
+                    
+                    
+                    
+                    tasks.append(Task(id=task_id.strip(), payload=payload.strip(), status=TaskStatus(status.strip()), priority=int(priority.strip())))
+        except UnicodeDecodeError as e:
+            raise Exception(f"Ошибка при чтении TXT: {e}")
+            
         except FileNotFoundError:
             raise FileNotFoundError("Ошибка: файл txt не найден")
         return tasks

@@ -8,10 +8,10 @@ def test_api_source_default():
     
     assert len(tasks) == 3
     assert all(isinstance(t, Task) for t in tasks)
-    assert tasks[0].id == 101
+    assert tasks[0].id == "101"
     assert tasks[0].payload == "Задача из API #1"
-    assert tasks[1].id == 102
-    assert tasks[2].id == 103
+    assert tasks[1].id == "102"
+    assert tasks[2].id == "103"
 
 def test_api_source_always_returns_same_data():
     source = APISource()
@@ -42,7 +42,7 @@ def test_api_source_multiple_calls_independent():
     
     # Изменение полученных задач не влияет на источник
     if tasks:
-        tasks[0].id = 999
+        tasks[0].id = "999"
     
     new_tasks = source.get_tasks()
-    assert new_tasks[0].id == 101
+    assert new_tasks[0].id == "101"

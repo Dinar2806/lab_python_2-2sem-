@@ -1,5 +1,5 @@
 import pytest
-from src.task.task import Task
+from src.task.task import Task, TaskStatus
 from src.task_sources.protocol import TaskSourceProtocol
 from src.task_sources.API_source import APISource
 from src.task_sources.file_source import FileSource
@@ -21,12 +21,12 @@ def test_collector_initial_state():
     assert collector.get_all_tasks() == []
 
 def test_collector_accepts_valid_source():
-    source = MockSource([Task(id=1, payload="тест")])
+    source = MockSource([Task(id=1, payload="тест", priority=3, status=TaskStatus.TODO)])
     collector = TaskCollector()
     
     tasks = collector.collect(source)
     assert len(tasks) == 1
-    assert tasks[0].id == 1
+    assert tasks[0].id == "1"
 
 def test_collector_rejects_invalid_source():
     collector = TaskCollector()
@@ -40,13 +40,13 @@ def test_collector_handles_id_conflicts():
     collector = TaskCollector()
     
     source1 = MockSource([
-        Task(id=1, payload="первая"),
-        Task(id=2, payload="вторая")
+        Task(id=1, payload="первая", priority=4, status=TaskStatus.TODO),
+        Task(id=2, payload="вторая", priority=3, status=TaskStatus.TODO)
     ])
     
     source2 = MockSource([
-        Task(id=1, payload="конфликт"),
-        Task(id=3, payload="третья")
+        Task(id=1, payload="конфликт", priority=4, status=TaskStatus.TODO),
+        Task(id=3, payload="третья", priority=4, status=TaskStatus.TODO)
     ])
     
     collector.collect(source1)
@@ -56,16 +56,16 @@ def test_collector_handles_id_conflicts():
     assert len(all_tasks) == 4
     
     ids = [t.id for t in all_tasks]
-    assert 1 in ids
-    assert 2 in ids
-    assert 3 in ids
+    assert "1" in ids
+    assert "2" in ids
+    assert "3" in ids
     
 
 def test_collector_preserves_payload_on_conflict():
     collector = TaskCollector()
     
-    source1 = MockSource([Task(id=1, payload="оригинал")])
-    source2 = MockSource([Task(id=1, payload="дубликат")])
+    source1 = MockSource([Task(id=1, payload="оригинал", priority=4, status=TaskStatus.TODO)])
+    source2 = MockSource([Task(id=1, payload="дубликат", priority=4, status=TaskStatus.TODO)])
     
     collector.collect(source1)
     collector.collect(source2)
@@ -75,15 +75,15 @@ def test_collector_preserves_payload_on_conflict():
     
     # Находим задачу с конфликтным payload
     conflict_task = next(t for t in tasks if t.payload == "дубликат")
-    assert conflict_task.id != 1
+    assert conflict_task.id != "1"
 
 def test_collector_multiple_sources_no_conflicts():
     collector = TaskCollector()
     
     sources = [
-        MockSource([Task(id=i, payload=f"src1_{i}") for i in range(3)]),
-        MockSource([Task(id=i+10, payload=f"src2_{i}") for i in range(3)]),
-        MockSource([Task(id=i+20, payload=f"src3_{i}") for i in range(3)])
+        MockSource([Task(id=i, payload=f"src1_{i}", priority=4, status=TaskStatus.TODO) for i in range(1, 4)]),
+        MockSource([Task(id=i+10, payload=f"src2_{i}", priority=4, status=TaskStatus.TODO) for i in range(1, 4)]),
+        MockSource([Task(id=i+20, payload=f"src3_{i}", priority=4, status=TaskStatus.TODO) for i in range(1, 4)])
     ]
     
     for source in sources:
@@ -92,19 +92,19 @@ def test_collector_multiple_sources_no_conflicts():
     all_tasks = collector.get_all_tasks()
     assert len(all_tasks) == 9
     
-    ids = [t.id for t in all_tasks]
-    assert sorted(ids) == list(range(3)) + list(range(10, 13)) + list(range(20, 23))
+    ids = [int(t.id) for t in all_tasks]
+    assert sorted(ids) == list(range(1, 4)) + list(range(11, 14)) + list(range(21, 24))
 
 def test_collector_quick_collect_function():
     sources = [
-        MockSource([Task(id=1, payload="a")]),
-        MockSource([Task(id=2, payload="b")])
+        MockSource([Task(id=1, payload="a", priority=4, status=TaskStatus.TODO)]),
+        MockSource([Task(id=2, payload="b", priority=4, status=TaskStatus.TODO)])
     ]
     
     tasks = quick_collect(sources)
     assert len(tasks) == 2
-    assert tasks[0].id == 1
-    assert tasks[1].id == 2
+    assert tasks[0].id == "1"
+    assert tasks[1].id == "2"
 
 def test_collector_empty_source():
     collector = TaskCollector()
@@ -117,8 +117,9 @@ def test_collector_empty_source():
 def test_collector_id_generation_sequential():
     collector = TaskCollector()
     
-    source1 = MockSource([Task(id=5, payload="a")])
-    source2 = MockSource([Task(id=5, payload="b"), Task(id=5, payload="c")])
+    source1 = MockSource([Task(id=5, payload="a", priority=4, status=TaskStatus.TODO)])
+    source2 = MockSource([Task(id=5, payload="b", priority=4, status=TaskStatus.TODO), 
+                          Task(id=5, payload="c", priority=4, status=TaskStatus.TODO)])
     
     collector.collect(source1)
     collector.collect(source2)
@@ -126,8 +127,8 @@ def test_collector_id_generation_sequential():
     tasks = collector.get_all_tasks()
     ids = [t.id for t in tasks]
     
-    assert 5 in ids
+    assert "5" in ids
     # Должны быть сгенерированы новые уникальные ID
     assert len(set(ids)) == 3
-    assert all(isinstance(id, int) for id in ids)
+    assert all(isinstance(id, str) for id in ids)
 
